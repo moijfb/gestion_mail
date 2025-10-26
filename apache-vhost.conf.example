@@ -1,0 +1,100 @@
+# Configuration Apache VirtualHost pour l'application de gestion d'emails
+# Copier ce fichier dans /etc/apache2/sites-available/
+# puis activer avec : sudo a2ensite gestion-emails.conf
+
+<VirtualHost *:80>
+    # Nom du serveur
+    ServerName gestion-emails.local
+    ServerAlias www.gestion-emails.local
+
+    # Email de l'administrateur
+    ServerAdmin admin@example.com
+
+    # DocumentRoot DOIT pointer vers le dossier public/
+    DocumentRoot /var/www/gestion_mail/public
+
+    # Configuration du dossier public
+    <Directory /var/www/gestion_mail/public>
+        # Options
+        Options -Indexes +FollowSymLinks +MultiViews
+
+        # Permettre .htaccess
+        AllowOverride All
+
+        # Autoriser l'accès
+        Require all granted
+
+        # Activer le module rewrite (nécessaire pour le routage)
+        RewriteEngine On
+
+        # Types MIME pour CSS et JS
+        <IfModule mod_mime.c>
+            AddType text/css .css
+            AddType application/javascript .js
+        </IfModule>
+    </Directory>
+
+    # IMPORTANT : Protéger le dossier data/
+    <Directory /var/www/gestion_mail/data>
+        Require all denied
+    </Directory>
+
+    # Protéger les autres dossiers sensibles
+    <Directory /var/www/gestion_mail/src>
+        Require all denied
+    </Directory>
+
+    <Directory /var/www/gestion_mail/config>
+        Require all denied
+    </Directory>
+
+    # Logs d'accès et d'erreurs
+    ErrorLog ${APACHE_LOG_DIR}/gestion-emails-error.log
+    CustomLog ${APACHE_LOG_DIR}/gestion-emails-access.log combined
+
+    # Configuration PHP (optionnel)
+    <IfModule mod_php.c>
+        php_value upload_max_filesize 10M
+        php_value post_max_size 10M
+        php_value memory_limit 128M
+        php_value max_execution_time 300
+    </IfModule>
+</VirtualHost>
+
+# Configuration HTTPS (optionnel, pour production)
+# Décommenter et configurer les certificats SSL
+#<VirtualHost *:443>
+#    ServerName gestion-emails.local
+#    ServerAlias www.gestion-emails.local
+#    ServerAdmin admin@example.com
+#
+#    DocumentRoot /var/www/gestion_mail/public
+#
+#    # Configuration SSL
+#    SSLEngine on
+#    SSLCertificateFile /etc/ssl/certs/gestion-emails.crt
+#    SSLCertificateKeyFile /etc/ssl/private/gestion-emails.key
+#    # SSLCertificateChainFile /etc/ssl/certs/ca-bundle.crt
+#
+#    <Directory /var/www/gestion_mail/public>
+#        Options -Indexes +FollowSymLinks +MultiViews
+#        AllowOverride All
+#        Require all granted
+#        RewriteEngine On
+#    </Directory>
+#
+#    <Directory /var/www/gestion_mail/data>
+#        Require all denied
+#    </Directory>
+#
+#    <Directory /var/www/gestion_mail/src>
+#        Require all denied
+#    </Directory>
+#
+#    <Directory /var/www/gestion_mail/config>
+#        Require all denied
+#    </Directory>
+#
+#    ErrorLog ${APACHE_LOG_DIR}/gestion-emails-ssl-error.log
+#    CustomLog ${APACHE_LOG_DIR}/gestion-emails-ssl-access.log combined
+#</VirtualHost>
