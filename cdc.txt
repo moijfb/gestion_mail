@@ -1,0 +1,236 @@
+Cahier des charges — Application de gestion d'e‑mails
+
+Version : 1.0
+
+Date : 26 octobre 2025
+
+1. Contexte et objectif
+
+Construire une application web (backend PHP + stockage uniquement dans des fichiers) permettant de gérer des listes d'emails, de les classer en groupes, de filtrer et retrouver des contacts, de copier des listes ou adresses pour les coller dans Outlook en CCI, d'administrer les envois par lots (paramétrable), et de gérer les inscriptions / désinscriptions. L'application doit être protégée par mot de passe (authentification et gestion/modification du mot de passe).
+
+Public cible : équipe marketing / administrateur en charge d'envois d'emails.
+
+2. Principales fonctionnalités demandées (exigences fonctionnelles)
+2.1 Gestion des contacts
+
+Création, modification, suppression d'un contact ( email obligatoire, champs optionnels : société, téléphone, notes).
+
+Import/export CSV (mappage des colonnes à l'import).
+
+Détection et gestion des doublons (option : ignorer, fusionner, créer doublon marqué).
+
+Validation d'email à l'ajout (format + option de vérification simple par regex).
+
+Lors de la création d'un nouveau contact, affichage d'un message d'information s'il figure déjà dans la liste des personnes désinscrites (voir 2.5).
+
+2.2 Groupes et tags
+
+Création/suppression/modification de groupes (listes nommées) et affectation multiple d'un contact à plusieurs groupes.
+
+Tags libres pour organiser les contacts (plus granulaire que groupes).
+
+Vue groupe (liste des contacts appartenant au groupe).
+
+2.3 Filtrage et recherche
+
+Filtres combinables : groupe(s), tag(s), domaine d'email, date d'ajout, texte libre (nom, société, note), statut d'abonnement (actif / désinscrit), validité email.
+
+Recherche full-text dans les champs principaux.
+
+Sauvegarde de filtres favoris.
+
+2.4 Copie et préparation d'envois (Outlook / CCI)
+
+Sélection multiple de contacts (par page ou sur toute la liste filtrée).
+
+Bouton "Copier les adresses" : copie en format prêt à coller en CCI (liste séparée par ; ou , configurable).
+
+Bouton "Copier la liste d'emails" : copie seulement la colonne email (format brut), avec option d'export CSV.
+
+Option pour copier les adresses groupées par domaine (utile pour règles Outlook).
+
+2.5 Désinscription / liste de désinscrits
+
+Page publique de désinscription (lien à partager) : l'utilisateur saisit son adresse email et confirme la désinscription.
+
+Validation côté serveur : si l'email est trouvé, il est marqué comme désinscrit et ajouté à la liste des désinscrits.
+
+Page admin listant tous les désinscrits (filtres, recherche, export CSV).
+
+Si un contact est présent dans la liste des désinscrits, il doit être exclu des listes pour envoi et visible comme tel partout.
+
+Historique (date et source de la désinscription : via lien public, manuel admin, import CSV, etc.).
+
+2.6 Paramétrage envois / découpage de lots
+
+Paramètre global définissant le nombre maximal d'adresses par envoi (ex: max_per_send).
+
+Lors de la préparation d'un envoi à partir d'une liste > max_per_send, l'application découpe automatiquement la liste en plusieurs lots numérotés.
+
+Interface affichant le découpage et permettant de copier chaque lot séparément.
+
+Option supplémentaire : pause entre lots configurable (temps en secondes) — utile si l'utilisateur utilise un script d'envoi externe.
+
+2.7 Inscription / double opt-in (optionnel)
+
+Lien d'inscription (formulaire public) : enregistrement de l'email dans une file d'attente de confirmation.
+
+Envoi d'un email de confirmation (si l'outil n'envoie pas d'emails, laisser en tant que statut à confirmer) — possibilité de marquer manuellement confirmé.
+
+2.8 Page des paramètres (admin)
+
+Paramètres applicatifs : max_per_send, format de séparation pour copie (, ou ;), langue, fuseau horaire, options d'import (détecter encodage, séparateur), suppression automatique après X jours (optionnel).
+
+Gestion du mot de passe admin (changement, politique de complexité optionnelle).
+
+Sauvegarde / restauration manuelle des fichiers de données.
+
+Sauvegarde automatique périodique configurable (cron externe ou tâche interne) — documenter la méthode car stockage fichier.
+
+2.9 Authentification et sécurité
+
+Page de login protégée par mot de passe (un seul compte admin ou support multi-comptes selon évolution future).
+
+Modification du mot de passe possible depuis l'interface (ancien mot de passe requis).
+
+Stockage du mot de passe haché (algorithme sécurisé — bcrypt / password_hash de PHP).
+
+Gestion de sessions sécurisées (durée, invalider sessions, logout).
+
+Protection CSRF pour formulaires critiques.
+
+Verrouillage des fichiers et gestion concurrente (file locking) pour éviter corruption.
+
+2.10 Statistiques et tableaux de bord
+
+Nombre total de contacts, contacts actifs, désinscrits, doublons détectés.
+
+Répartition par groupe (top groupes), par domaine d'email (top 20), par date d'ajout (graphique d'évolution).
+
+Statistiques sur envois/batches : nombre de lots générés, taille moyenne.
+
+Journaux (logs) : activités admin (création, modification, suppression), imports/exports, désinscriptions.
+
+Export des statistiques en CSV.
+
+2.11 Notifications & messages
+
+Message d'information si création d'un contact qui est dans la liste de désinscrits (message clair et action recommandée — ne pas le réactiver sans consentement).
+
+Notifications internes (toast) pour actions réussies/échouées (import terminé, copie effectuée, paramètre enregistré, erreur de verrouillage de fichier...).
+
+2.12 Fonctionnalités avancées recommandées
+
+Historique des modifications par contact (audit minimal : qui / quand / quoi) — utile pour respecter demandes de suppression.
+
+Import programmatique via dépôt de fichier CSV dans un dossier import/ surveillé.
+
+Export automatique vers dossier export/ configurable.
+
+Filtrage/sélection par segment (ex : tous contact ajoutés dans les 30 derniers jours et avec tag "lead").
+
+Option d'archivage des anciens contacts (fichiers séparés) pour garder les fichiers principaux légers.
+
+Mode lecture seule pour consultation.
+
+Possibilité d'anonymiser/exporter sans emails (GDPR-friendly) — option de suppression ou anonymisation.
+
+API interne légère (endpoints PHP) pour intégration future.
+
+3. Contraintes techniques
+
+Langage : PHP (compatible PHP 8.x recommandé).
+
+Stockage : fichiers uniquement (pas de base de données relationnelle). Formats recommandés : JSON pour objets (contacts, groupes, settings), CSV pour imports/exports, et fichiers journaux en texte (log).
+
+Emplacement des fichiers : arborescence contrôlée (ex : data/contacts.json, data/groups.json, data/unsubscribed.json, data/settings.json, data/logs/).
+
+Concurrence : utiliser verrouillage de fichier (flock) pour toutes les opérations d'écriture.
+
+Sauvegarde : créer snapshots compactés (zip) de data/ avant opérations majeures.
+
+Authentification : stockage du(s) hash(s) de mot de passe dans data/users.json.
+
+Architecture : applicatif monolithique PHP (MVC léger recommandé), pages servies côté serveur.
+
+Envoi d'emails : l'application ne gère pas l'envoi direct (sauf si demandé ultérieurement). Elle prépare/formatte les listes et fournit des exports/copier-coller destinés à Outlook. (Si un envoi natif est requis, ajouter SMTP et gestion d'état d'envoi.)
+
+4. Structure des fichiers (proposition)
+
+data/contacts.json — tableau d'objets contact : {id, email, nom, prenom, societe, telephone, tags:[], groupes:[], statut:"active|unsubscribed|pending", date_added, notes}
+
+data/groups.json — {id, name, description, date_created, contact_ids:[]}
+
+data/unsubscribed.json — {email, date, reason, source}
+
+data/settings.json — {max_per_send, separator, language, timezone, backup_enabled, ...}
+
+data/users.json — {username, password_hash, date_created, last_login}
+
+data/logs/ — fichiers journaux horodatés
+
+data/import_queue/ et data/export_queue/ — dossiers pour opérations asynchrones gérées par fichier
+
+5. Pages / écran (interface utilisateur)
+
+Page Login — entrée mot de passe.
+
+Dashboard — stats globales, raccourcis.
+
+Contacts — liste, filtres, recherche, actions (éditer, supprimer, copier emails, ajouter aux groupes, exporter CSV).
+
+Groupes — créer/éditer/supprimer groupes, vue membres.
+
+Composer / Préparer envoi — sélectionner contacts (filtre), voir découpage en lots selon max_per_send, copier les lots.
+
+Import / Export — interface d'import CSV, recapitulatif, log d'import.
+
+Désinscriptions — page listant les désinscrits, export CSV, possibilité de réactiver (si politique autorisée).
+
+Paramètres — réglages globaux, gestion du mot de passe, sauvegarde/restore.
+
+Logs / Audit — historique des opérations.
+
+Page publique : Désinscription — formulaire public pour saisir email et confirmer désinscription.
+
+6. Ergonomie et UI/UX (recommandations)
+
+Interface claire, responsive.
+
+Actions primaires visibles (bouton copier, bouton import/export, bouton ajouter contact).
+
+Modales pour confirmations (suppression, import massif).
+
+Indicateur de verrouillage/chargement lors d'opérations d'écriture sur fichiers.
+
+Notifications toast pour retours rapides.
+
+7. Sécurité & conformité
+
+Hachage des mots de passe (password_hash de PHP, préférer bcrypt/argon2 si dispo).
+
+Protéger la page publique de désinscription contre abus (limiter requêtes par IP, captcha optionnel).
+
+S'assurer que les fichiers data/ ne sont pas accessibles depuis le web (placer hors www ou protéger par .htaccess).
+
+Sauvegardes chiffrées (optionnelle) si données sensibles.
+
+Journaux d'accès pour audit.
+
+Prévoir suppression complète des données sur demande (GDPR), et une procédure d'anonymisation.
+
+8. Tests et critères d'acceptation
+
+Tests unitaires PHP pour fonctions de lecture/écriture de fichiers, verrouillage, import/export, traitement de doublons.
+
+Tests d'intégration manuels : import CSV, marquage désinscrit via page publique, création contact qui est désinscrit (message affiché), découpage en lots > max_per_send, copie en CCI format valide.
+
+Vérifier que les fichiers de données restent cohérents après opérations concurrentes (test multi-upload / multi-user si applicable).
+
+Vérifier changement de mot de passe, login/logout et invalidation de session.
+
+Vérifier que les fichiers de données ne sont pas accessibles via URL directe.
+
+9. Exigences non‑fonctionnelles
+
+Application légère, rapide pour des bases de l'ordre de quel
