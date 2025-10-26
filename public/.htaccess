@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Rediriger toutes les requêtes vers index.php sauf fichiers existants
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Empêcher l'affichage de la liste des fichiers
+Options -Indexes
